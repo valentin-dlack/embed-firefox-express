@@ -1,0 +1,56 @@
+{% extends 'layout.twig' %}
+
+{% block body %}
+  <h1 class="text-3xl mx-4 mt-5">{{title}}</h1>
+  <p class="mx-4">Welcome to {{title}}</p>
+  <div class="mt-5">
+    <div class="mb-2">
+      <input type="text" id="docker-link" class="input input-primary" placeholder="Lien du site/de la page">
+    </div>
+    <button id="docker-button" class="btn btn-primary">Start Docker</button>
+    <button id="docker-stop-button" class="btn btn-error">Stop Docker</button>
+    <div id="docker-iframe" class="mt-5 mx-5">
+      
+    </div>
+  </div>
+
+  <script>
+    var dockerButton = document.getElementById('docker-button');
+    var dockerStopButton = document.getElementById('docker-stop-button');
+    var dockerLink = document.getElementById('docker-link');
+
+    dockerButton.addEventListener('click', async function() {
+      await axios.get('http://localhost:3000/docker-start' + `?link=${dockerLink.value}`)
+        .then(async function (response) {
+          await console.log(response);
+          let name = response.data.split(';')[0];
+          let port = response.data.split(';')[1];
+          let iframe = `<iframe src='http://localhost:${port}' width='100%' height='1000px' id="${name}" frameborder='0'></iframe>`; 
+          document.getElementById('docker-iframe').innerHTML = iframe;
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    });
+
+    dockerStopButton.addEventListener('click', function() {
+      // get container name from iframe id
+      let containerName = document.getElementById('docker-iframe').firstChild.id;
+      axios.get(`http://localhost:3000/docker-stop/${containerName}`)
+        .then(async function (response) {
+          await console.log(response);
+          document.getElementById('docker-iframe').innerHTML = '';
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    });
+
+    // if the user closes the window, stop the container
+    window.onbeforeunload = function(e) {
+      return 'Please press the Logout button to logout.';
+    };
+
+
+  </script>
+{% endblock %}
